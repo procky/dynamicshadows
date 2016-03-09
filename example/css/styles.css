@@ -1,0 +1,16 @@
+#example1 {
+	margin: 100px;
+	padding: 20px;
+	width: 200px;
+	height: 200px;
+	background-color: #111;
+	color: #eee;
+}
+#example2 {
+	font-size: 3em;
+	margin-left: 100px;
+	position: absolute; /* get the p tightly wrapping the text for easy shadows */
+	top: 250px;
+	left: 500px;
+	margin: 0;
+}
