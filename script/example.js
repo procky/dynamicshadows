@@ -31,3 +31,14 @@ function onMouseMove(e) {
 	// pass the mouse position to dynamicShadows.js to recalculate the shadows
 	dynamicShadows.setLightPosition(mousePosition);
 }
+
+// stats.js
+var stats = new Stats();
+stats.domElement.style.cssText='position:fixed; right:0; top:0; z-index:10000';
+document.body.appendChild(stats.domElement);
+requestAnimationFrame(
+	function loop(){
+		stats.update();
+		requestAnimationFrame(loop)
+	}
+);
