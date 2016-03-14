@@ -13,7 +13,8 @@ dynamicShadows = (function() {
 
 	var boxShadowElements = [],
 		textShadowElements = [],
-		maxShadowOffset = 9999;
+		maxShadowOffset = 9999,
+		fps = 30;
 			
 	var boxPropertyCheck = function(e) {
 		if(typeof e.style.webkitBoxShadow === 'string') {
@@ -72,7 +73,55 @@ dynamicShadows = (function() {
 		
         return shadowX + 'px ' + shadowY + 'px '+ blurAmount + 'px #d2d2d2';
 	},
-	updateShadows = function(lightPosition) {
+	throttle = function(func, wait, options) { // throttle borrowed from underscore.js
+		var timeout, context, args, result;
+		var previous = 0;
+		if(!options) {
+			options = {};
+		}
+
+		var later = function() {
+			previous = (options.leading === false) ? 0 : new Date().getTime();
+			timeout = null;
+			result = func.apply(context, args);
+			if(!timeout) {
+				context = args = null;
+			}
+		};
+
+		var throttled = function() {
+			var now = new Date().getTime();
+			if(!previous && options.leading === false) {
+				previous = now;
+			}
+			var remaining = wait - (now - previous);
+			context = this;
+			args = arguments;
+			if(remaining <= 0 || remaining > wait) {
+				if(timeout) {
+					clearTimeout(timeout);
+					timeout = null;
+				}
+				previous = now;
+				result = func.apply(context, args);
+				if(!timeout) {
+					context = args = null;
+				}
+			} else if(!timeout && options.trailing !== false) {
+				timeout = setTimeout(later, remaining);
+			}
+			return result;
+		};
+
+		throttled.cancel = function() {
+			clearTimeout(timeout);
+			previous = 0;
+			timeout = context = args = null;
+		};
+
+		return throttled;
+	},
+	updateShadows = throttle(function(lightPosition) {
 		// loop each element
 		var i;
 		for(i = 0; i < boxShadowElements.length; i++) {
@@ -81,12 +130,15 @@ dynamicShadows = (function() {
 		for(i = 0; i < textShadowElements.length; i++) {
 			textShadowElements[i].element.style.textShadow = textShadowGen(textShadowElements[i].center, lightPosition, textShadowElements[i].blurAmount);
 		}
-	};
+	}, (1/fps)*1000);
 	
 	return { // public interface
-		init: function(maxOffset) {
+		init: function(maxOffset, framesPerSecond) {
 			if(maxOffset) {
 				maxShadowOffset = maxOffset;
+			}
+			if(framesPerSecond) {
+				fps = framesPerSecond;
 			}
 			window.addEventListener('resize', function() {
 				// get the updated center positions for all the elements
